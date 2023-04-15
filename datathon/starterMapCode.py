@@ -72,8 +72,15 @@ Parameters:
 
 # df = pd.merge(df, , on=)
 
-fig = px.choropleth_mapbox(df, geojson=geojson, 
-                           color = "", # Might need to change depending on what you want to measure
+crime_freq = df.dropna(subset=['PDQ'])
+
+crime_freq = crime_freq.groupby('PDQ').agg({'CATEGORIE': 'count'}).sort_values(by='CATEGORIE',ascending=False)
+crime_freq = crime_freq.rename(columns={'CATEGORIE': 'crime_count'})
+combined_table = pd.merge(df, crime_freq, on="PDQ", how='inner')
+combined_table = combined_table.drop_duplicates(subset=['PDQ']).sort_values(by='PDQ', ascending=False)
+
+fig = px.choropleth_mapbox(combined_table, geojson=geojson, 
+                           color = "crime_count", # Might need to change depending on what you want to measure
                            locations="PDQ", featureidkey="properties.PDQ",
                            center={'lat': 45.508888, 'lon': -73.561668}, # Can change the coordinates to make city more centered
                            mapbox_style="carto-positron", # Another option is called "open-street-map" :o
