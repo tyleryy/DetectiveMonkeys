@@ -29,12 +29,12 @@ Path.cwd() returns the current working directory as a Path object.
 The current working directory is the directory in which the Python script is currently running.
 """
 # Loads the geojson into a JSON object
-geojsonPath = Path.cwd()/'limitespdq.geojson' # You might need to change this depending on where and how you are running this code
+geojsonPath = Path.cwd() / 'limitespdq.geojson' # You might need to change this depending on where and how you are running this code
 geojson = json.load(open(geojsonPath, "r")) # The GeoJSON data contains the boundaries of the different precincts.
 
 # Loads the criminal logs into a pandas dataframe
 # You will probably need to manipulate the dataframe to get something good from it :D
-criminalLogsPath = Path.cwd()/'actes-criminels.csv'
+criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
 df = pd.read_csv(criminalLogsPath)
 
 """
