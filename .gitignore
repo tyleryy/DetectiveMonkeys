@@ -1,4 +1,6 @@
-**/actes-criminels.csv
+**/*.csv
 **/limitespdq.geojson
 **/.idea
 **/prop_mtl.csv
+**/.ipynb_checkpoints
+**/.conda
