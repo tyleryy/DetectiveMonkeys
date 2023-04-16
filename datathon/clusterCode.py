@@ -3,6 +3,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 from pathlib import Path
+from dash.dependencies import Input, Output
+import dash
+from dash import dcc, html
 
 # You will probably need to manipulate the dataframe to get something good from it :D
 criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
@@ -10,10 +13,17 @@ criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
 # Load the criminal dataframe
 df = pd.read_csv(criminalLogsPath)
 
-df = df.head(20000)
+# Define the bar chart
+crime_freq = df.pivot_table(index='PDQ', columns='CATEGORIE', values='DATE', aggfunc='count')
+
+crime_freq = crime_freq.fillna(0)
+
+fig = px.bar(crime_freq, barmode='stack', width=1000, height=800)
+
+# Define the scatter plot trace
+df = df.head(50000)
 
 df = df.dropna()
-
 
 criminal_map = {
     3: 'Vol de véhicule à moteur',
@@ -21,46 +31,9 @@ criminal_map = {
     2: 'Vol dans / sur véhicule à moteur',
     0: 'Introduction',
     4: 'Vols qualifiés',
-    5: ''
+    5: 'Infraction entrainant la mort',
 }
 
-
-print(df['CATEGORIE'])
-
-
-# Print the unique category codes in the DataFrame
-print('\nUnique Category Codes in DataFrame:')
-mapping = df['CATEGORIE'].astype('category').cat.codes
-
-
-# Print the rows with category code 5
-print('\nRows with Category Code 5:')
-print(df[mapping == 5])
-
-
-quart_map = {
-    'jour': 1,
-    'soir': 2,
-    'nuit': 3
-}
-
-df['QUART'] = df['QUART'].map(quart_map)
-
-# Convert date string to datetime
-
-df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m-%d')
-
-# Convert datetime to ordinal
-
-
-# Randomly choose 10000 rows from the dataframe
-
-
-# Figure out the encoding of the crime type
-
-
-
-# Define the scatter plot trace
 scatter = go.Scatter3d(
     x=df['PDQ'],
     y=df['LATITUDE'],
@@ -73,10 +46,7 @@ scatter = go.Scatter3d(
         opacity=0.7,
         colorbar=dict(thickness=20, ticklen=4, title='Crime Type')
     ),
-    showlegend=True,
 )
-
-# Define the cluster trace
 
 # Define the layout
 layout = go.Layout(
@@ -94,8 +64,55 @@ layout = go.Layout(
         font=dict(size=10)
     )
 )
-# Create the figure
-fig = go.Figure(data=[scatter], layout=layout)
 
-# Show the figure
-fig.show()
+# Define the time bar chart
+
+
+time_bar = df.groupby('QUART')['CATEGORIE'].agg(['count']).sort_values(by='count', ascending=False)
+time_bar_fig = px.bar(time_bar, x=time_bar.index, y='count', width=1000, height=800)
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    html.Div(
+        children=dcc.Graph(
+            id='cluster-graph',
+            figure={
+                'data': [scatter],
+                'layout': layout
+            },
+            style={
+                'width': '1000px',
+                'height': '800px',
+                'margin': 'auto'
+            }
+        )
+    ),
+
+    html.Div(
+        children=dcc.Graph(
+            id='bar-chart',
+            figure=fig,
+            style={
+                'width': '800px',
+                'height': '800px',
+                'margin': 'auto'
+            }
+        )
+    ),
+
+    html.Div(
+        children=dcc.Graph(
+            id='time-bar-chart',
+            figure=time_bar_fig,
+            style={
+                'width': '800px',
+                'height': '800px',
+                'margin': 'auto'
+            }
+        )
+    )
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True, use_reloader=True)
