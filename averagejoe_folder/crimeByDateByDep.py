@@ -18,11 +18,9 @@ def getMonthYear(str):
     return str.split('-')[0] + '-' + str.split('-')[1]
 df['MONTHYEAR'] = df['DATE'].apply(getMonthYear)
 
-
 #CRUCIAL STUFF____________________________________________________________________________
 
 maps = []
-
 for monthyear in df.MONTHYEAR.unique():
     df2 = df.drop(df[df.MONTHYEAR != monthyear].index)
     crime_freq = df2.dropna(subset=['PDQ'])
