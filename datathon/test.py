@@ -8,13 +8,13 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Output, Input
 import math
 
-geojsonPath = Path.cwd().parent / 'limitespdq.geojson'
+geojsonPath = Path.cwd() / 'limitespdq.geojson'
 geojson = json.load(open(geojsonPath, "r"))
-criminalLogsPath = Path.cwd().parent / 'actes-criminels.csv'
+criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
 df = pd.read_csv(criminalLogsPath)
 
-rangeslider_marks = {0:'$0', 5:'$5 billion', 10:'$10 billion', 15:'$15 billion', 20:'$20 billion',
-                     25:'$25 billion', 30:'$30 billion', 35:'$35 billion', 40:'$40 billion'}
+rangeslider_marks = {0:'2015', 12:'2016', 24:'2017', 36:'2018', 48:'2019',
+                     60:'2020', 72:'2021', 84:'2022', 96:'2023'}
 
 app = Dash(__name__)
 app.layout = html.Div(
@@ -22,15 +22,16 @@ app.layout = html.Div(
         html.H1("Crime in Montreal by Date", style={'textAlign': 'center'}),
 
         html.Label("Month/Year"),
-        dcc.Slider(min=df['Severe Storm Count'].min(),
-                   max=df['Severe Storm Count'].max(),
+        dcc.Slider(min=0,
+                   max=98,
                    step=1,
-                   value=13,
-                   tooltip={"placement": "bottom", "always_visible": True},
+                   value=99,
+                   marks=rangeslider_marks,
+                   tooltip={"placement": "bottom", "always_visible": False},
                    updatemode='drag',
                    persistence=True,
-                   persistence_type='session', # 'memory' or 'local'
-                   id="my-slider"
+                   persistence_type='session',
+                   id="monthyear"
         ),
 
         dcc.Graph(id='my-graph')
@@ -41,22 +42,25 @@ app.layout = html.Div(
 
 @app.callback(
     Output('my-graph', 'figure'),
-    Input('my-slider', 'value'),
-    Input('my-rangeslider', 'value')
+    Input('monthyear', 'value'),
 )
-def update_graph(n_storms, dollar_range):
-    bool_series = df['Severe Storm Count'].between(0, n_storms, inclusive='both')
-    df_filtered = df[bool_series]
-    fig = px.bar(data_frame=df_filtered,
-                 x='Year',
-                 y='Severe Storm Count',
-                 range_y=[df['Severe Storm Count'].min(), df['Severe Storm Count'].max()],
-                 range_x=[df['Year'].min()-1, df['Year'].max()+1])
+def update_graph(dateindex):
 
-    bool_series2 = df['Severe Storm Costs (Billions)'].between(dollar_range[0], dollar_range[1], inclusive='both')
-    filtered_year = df[bool_series2]['Year'].values
-    fig["data"][0]["marker"]["color"] = ["orange" if c in filtered_year else "blue" for c in fig["data"][0]["x"]]
+    crime_freq = df.dropna(subset=['PDQ'])
 
+    crime_freq = crime_freq.groupby('PDQ').agg({'CATEGORIE': 'count'}).sort_values(by='CATEGORIE',ascending=False)
+    crime_freq = crime_freq.rename(columns={'CATEGORIE': 'crime_count'})
+    combined_table = pd.merge(df, crime_freq, on="PDQ", how='inner')
+    combined_table = combined_table.drop_duplicates(subset=['PDQ']).sort_values(by='PDQ', ascending=False)
+
+    fig = px.choropleth_mapbox(combined_table, geojson=geojson, 
+                           color = "crime_count",
+                           locations="PDQ", featureidkey="properties.PDQ",
+                           center={'lat': 45.508888, 'lon': -73.561668},
+                           mapbox_style="carto-positron",
+                           zoom=9
+                           )
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     return fig
 
 
