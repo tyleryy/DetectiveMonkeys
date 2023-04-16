@@ -4,38 +4,38 @@ import plotly.express as px
 import plotly.graph_objs as go
 from pathlib import Path
 
-"""
-Author: Colin Yee
-Date: 3/10/23
-
-Background:
-**Plotly** is a data visualization library that allows users to create interactive charts and graphs.
-Users can interact with the charts by zooming, panning, hovering, and clicking on the data points to get 
-additional information. Plotly also allows users to add annotations, text, and images to their charts, making 
-it easy to highlight important data points or trends.
-
-**GeoJSON** is a file format for encoding geographical data structures like points, lines, and polygons into a JSON format. 
-It consist of objects representing features with properties like name and location data. 
-They are used to display and manipulate geographical data. 
-
-The code below essentially:
-1. Finds the correct GeoJson and Criminal Logs Data (you may need to change the paths appropriately)
-2. Loads the GeoJson into Json Fomat and the criminal logs into a dataframe.
-3. Creates a very basic, barebones map in Plotly using the geojson and criminal logs.
-"""
-
-"""
-The **Path** library is a Python module for working with file and directory paths.
-Path.cwd() returns the current working directory as a Path object. 
-The current working directory is the directory in which the Python script is currently running.
-"""
 # You will probably need to manipulate the dataframe to get something good from it :D
 criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
 
 # Load the criminal dataframe
 df = pd.read_csv(criminalLogsPath)
 
+df = df.head(20000)
+
 df = df.dropna()
+
+
+criminal_map = {
+    3: 'Vol de véhicule à moteur',
+    1: 'Méfait',
+    2: 'Vol dans / sur véhicule à moteur',
+    0: 'Introduction',
+    4: 'Vols qualifiés',
+    5: ''
+}
+
+
+print(df['CATEGORIE'])
+
+
+# Print the unique category codes in the DataFrame
+print('\nUnique Category Codes in DataFrame:')
+mapping = df['CATEGORIE'].astype('category').cat.codes
+
+
+# Print the rows with category code 5
+print('\nRows with Category Code 5:')
+print(df[mapping == 5])
 
 
 quart_map = {
@@ -53,10 +53,11 @@ df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m-%d')
 # Convert datetime to ordinal
 
 
-
 # Randomly choose 10000 rows from the dataframe
 
-df = df.sample(n=10000)
+
+# Figure out the encoding of the crime type
+
 
 
 # Define the scatter plot trace
@@ -69,18 +70,13 @@ scatter = go.Scatter3d(
         size=2,
         color=df['CATEGORIE'].astype('category').cat.codes,
         colorscale='Viridis',
-        opacity=0.1
-    )
+        opacity=0.7,
+        colorbar=dict(thickness=20, ticklen=4, title='Crime Type')
+    ),
+    showlegend=True,
 )
 
 # Define the cluster trace
-clusters = go.Mesh3d(
-    x=df['PDQ'],
-    y=df['LATITUDE'],
-    z=df['LONGITUDE'], alphahull=7,
-    opacity=0.1,
-    color='cyan'
-)
 
 # Define the layout
 layout = go.Layout(
@@ -89,11 +85,17 @@ layout = go.Layout(
         xaxis=dict(title='PDQ'),
         yaxis=dict(title='Latitude'),
         zaxis=dict(title='Longitude')
+    ),
+    legend=dict(
+        title='Legend',
+        bgcolor='rgba(255,255,255,0.7)',
+        bordercolor='rgba(0,0,0,0.8)',
+        borderwidth=1,
+        font=dict(size=10)
     )
 )
-
 # Create the figure
-fig = go.Figure(data=[scatter, clusters], layout=layout)
+fig = go.Figure(data=[scatter], layout=layout)
 
 # Show the figure
 fig.show()
