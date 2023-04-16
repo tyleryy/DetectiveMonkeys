@@ -1,6 +1,6 @@
 # DetectiveMonkeys
 
-# commands
+# Conda Env Commands
 
 Saving local packages to requirements.txt:
 pip freeze > requirements.txt
