@@ -8,9 +8,9 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Output, Input
 import math
 
-geojsonPath = Path.cwd() / 'limitespdq.geojson'
+geojsonPath = Path.cwd().parent/ 'public' / 'limitespdq.geojson'
 geojson = json.load(open(geojsonPath, "r"))
-criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
+criminalLogsPath = Path.cwd().parent/ 'public' / 'actes-criminels.csv'
 df = pd.read_csv(criminalLogsPath)
 
 #Add the extra column Monthyear to df
@@ -83,4 +83,4 @@ def update_graph(dateindex):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=3000)

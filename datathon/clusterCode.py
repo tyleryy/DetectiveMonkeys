@@ -8,7 +8,7 @@ import dash
 from dash import dcc, html
 
 # You will probably need to manipulate the dataframe to get something good from it :D
-criminalLogsPath = Path.cwd() / 'actes-criminels.csv'
+criminalLogsPath = Path.cwd().parent / 'public' / 'actes-criminels.csv'
 
 # Load the criminal dataframe
 df = pd.read_csv(criminalLogsPath)
